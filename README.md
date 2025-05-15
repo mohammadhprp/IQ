@@ -1,18 +1,10 @@
-# IQ - Product Analyzer API
+# IQ 🧠
 
-A FastAPI-based service that analyzes product comments using AI to provide ratings, summaries, fake comment detection, and keyword extraction.
-
-## Features
-
-- Product rating analysis (1-5 scale)
-- Comment summary generation
-- Fake comment detection
-- Keyword extraction
-- RESTful API interface
+A API-based service that analyzes product comments using AI to provide ratings, summaries, fake comment detection, and keyword extraction.
 
 ## Prerequisites
 
-- Python 3.8+
+- Docker
 - Google API Key for Gemini AI
 
 ## Installation
@@ -24,38 +16,33 @@ git clone https://github.com/mohammadhprp/IQ.git
 cd IQ
 ```
 
-2. Create and activate a virtual environment:
+2. Create a `.env` file in the root directory with your Google API key:
 
-```bash
-python -m venv venv
-source venv/bin/activate 
-```
-
-3. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-4. Create a `.env` file in the root directory with your Google API key:
-
-```
+```env
 GOOGLE_API_KEY=your_api_key_here
 ```
 
 ## Usage
 
-1. Start the server:
+1. Start the application:
 
 ```bash
-python -m app.main
+docker compose up -d
 ```
 
-2. The API will be available at `http://localhost:8000`
 
-3. API Documentation will be available at:
-   - Swagger UI: `http://localhost:8000/docs`
-   - ReDoc: `http://localhost:8000/redoc`
+The API will be available at `http://localhost:8000`
+
+API Documentation will be available at:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+2. To stop the application:
+
+```bash
+docker compose down
+```
 
 ## API Endpoints
 
