@@ -1,31 +1,41 @@
 import uvicorn
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import router
+from app.core.config import get_settings
 
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    settings = get_settings()
+    
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.APP_VERSION,
+        description=settings.APP_DESCRIPTION,
+    )
 
-app = FastAPI(
-    title="Product Analyzer API",
-    version="1.0.0",
-    description="Analyze product comments: rating, summary, fake-comment detection, and keyword extraction.",
-)
+    # Configure CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    # Include routers
+    app.include_router(router, prefix=settings.API_PREFIX)
 
-app.include_router(router, prefix="/api")
+    return app
+
+app = create_app()
 
 if __name__ == "__main__":
+    settings = get_settings()
     uvicorn.run(
         "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.RELOAD,
     )

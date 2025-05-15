@@ -1,26 +1,50 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dotenv import load_dotenv
+from typing import Annotated
 
 from app.models.product import Product, AnalysisResponse
 from app.gen.analyzer import ProductAnalyzer
-import os
+from app.core.config import get_settings
 
-
-load_dotenv() 
 router = APIRouter()
 
-def get_analyzer():
-    google_api_key = os.getenv("GOOGLE_API_KEY")
-    if not google_api_key:
-        raise HTTPException(status_code=500, detail="GOOGLE_API_KEY not configured")
-    return ProductAnalyzer(google_api_key=google_api_key)
+def get_analyzer() -> ProductAnalyzer:
+    """Get a configured ProductAnalyzer instance."""
+    settings = get_settings()
+    try:
+        return ProductAnalyzer(
+            model_name=settings.LLM_MODEL_NAME,
+            temperature=settings.LLM_TEMPERATURE
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize analyzer: {str(e)}"
+        )
+
+AnalyzerDependency = Annotated[ProductAnalyzer, Depends(get_analyzer)]
 
 @router.post("/analyze", response_model=AnalysisResponse)
 async def analyze_product(
     product: Product,
-    analyzer: ProductAnalyzer = Depends(get_analyzer)
-):
+    analyzer: AnalyzerDependency
+) -> AnalysisResponse:
+    """
+    Analyze a product and its comments.
+    
+    Args:
+        product: The product to analyze
+        analyzer: The product analyzer instance
+        
+    Returns:
+        AnalysisResponse containing the analysis results
+        
+    Raises:
+        HTTPException: If analysis fails
+    """
     try:
         return analyzer.analyze_product(product)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
