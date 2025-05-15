@@ -5,10 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers import router
 from app.core.config import get_settings
 
+
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
-    
+
     app = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
@@ -28,6 +29,7 @@ def create_app() -> FastAPI:
     app.include_router(router, prefix=settings.API_PREFIX)
 
     return app
+
 
 app = create_app()
 
