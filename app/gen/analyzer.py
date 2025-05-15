@@ -6,6 +6,11 @@ from langgraph.graph import Graph, StateGraph
 from langgraph.prebuilt import ToolNode
 from app.models.product import Product, AnalysisResponse
 from app.core.config import get_settings
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AnalysisState(TypedDict):
     """State for the analysis workflow."""
@@ -32,17 +37,30 @@ class ProductAnalyzer:
         )
         self.analysis_graph = self._create_analysis_graph()
 
+    def _log_node_execution(self, node_func):
+        """Wrapper function to log state before and after node execution."""
+        def wrapper(state: AnalysisState) -> AnalysisState:
+            node_name = node_func.__name__
+            logger.info(f"Executing node: {node_name}")
+            # logger.info(f"Input state for {node_name}: {state}")
+            
+            result = node_func(state)
+            
+            #logger.info(f"Output state from {node_name}: {result}")
+            return result
+        return wrapper
+
     def _create_analysis_graph(self) -> Graph:
         """Create the analysis workflow graph."""
         workflow = StateGraph(AnalysisState)
 
-        # Add nodes
-        workflow.add_node("prepare_comments", self._prepare_comments)
-        workflow.add_node("analyze_rating", self._analyze_rating)
-        workflow.add_node("generate_summary", self._generate_summary)
-        workflow.add_node("detect_fake_comments", self._detect_fake_comments)
-        workflow.add_node("extract_keywords", self._extract_keywords)
-        workflow.add_node("analyze_pros_cons", self._analyze_pros_cons)
+        # Add nodes with logging wrapper
+        workflow.add_node("prepare_comments", self._log_node_execution(self._prepare_comments))
+        workflow.add_node("analyze_rating", self._log_node_execution(self._analyze_rating))
+        workflow.add_node("generate_summary", self._log_node_execution(self._generate_summary))
+        workflow.add_node("detect_fake_comments", self._log_node_execution(self._detect_fake_comments))
+        workflow.add_node("extract_keywords", self._log_node_execution(self._extract_keywords))
+        workflow.add_node("analyze_pros_cons", self._log_node_execution(self._analyze_pros_cons))
 
         # Define the edges
         workflow.add_edge("prepare_comments", "analyze_rating")
