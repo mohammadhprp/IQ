@@ -16,6 +16,8 @@ class AnalysisState(TypedDict):
     summary: str
     fake_comments: List[str]
     keywords: List[str]
+    pros: List[str]
+    cons: List[str]
 
 class ProductAnalyzer:
     """Analyzes products and their comments using AI."""
@@ -40,12 +42,14 @@ class ProductAnalyzer:
         workflow.add_node("generate_summary", self._generate_summary)
         workflow.add_node("detect_fake_comments", self._detect_fake_comments)
         workflow.add_node("extract_keywords", self._extract_keywords)
+        workflow.add_node("analyze_pros_cons", self._analyze_pros_cons)
 
         # Define the edges
         workflow.add_edge("prepare_comments", "analyze_rating")
         workflow.add_edge("analyze_rating", "generate_summary")
         workflow.add_edge("generate_summary", "detect_fake_comments")
         workflow.add_edge("detect_fake_comments", "extract_keywords")
+        workflow.add_edge("extract_keywords", "analyze_pros_cons")
 
         # Set the entry point
         workflow.set_entry_point("prepare_comments")
@@ -144,6 +148,43 @@ class ProductAnalyzer:
         
         return {**state, "keywords": keywords}
 
+    def _analyze_pros_cons(self, state: AnalysisState) -> AnalysisState:
+        """Analyze and extract pros and cons from the comments."""
+        pros_cons_prompt = ChatPromptTemplate.from_template(
+            """You are an expert product analyst. Extract the main pros and cons from the following product comments.
+            Product: {product_name}
+            Comments: {comments_text}
+            
+            List the pros and cons as separate bullet points. Each point should be concise (max 5 words).
+            Format your response exactly like this:
+            PROS:
+            - [pro1]
+            - [pro2]
+            - [pro3]
+            
+            CONS:
+            - [con1]
+            - [con2]
+            - [con3]
+            """
+        )
+        
+        pros_cons_chain = pros_cons_prompt | self.llm
+        pros_cons_response = pros_cons_chain.invoke({
+            "product_name": state["product_name"],
+            "comments_text": state["comments_text"]
+        })
+        
+        # Parse the response to extract pros and cons
+        response_text = pros_cons_response.content.strip()
+        pros_section = response_text.split("PROS:")[1].split("CONS:")[0].strip()
+        cons_section = response_text.split("CONS:")[1].strip()
+        
+        pros = [p.strip("- ").strip() for p in pros_section.split("\n") if p.strip()]
+        cons = [c.strip("- ").strip() for c in cons_section.split("\n") if c.strip()]
+        
+        return {**state, "pros": pros, "cons": cons}
+
     def analyze_product(self, product: Product) -> AnalysisResponse:
         """
         Analyze a product and its comments.
@@ -162,7 +203,9 @@ class ProductAnalyzer:
             "rating": 0.0,
             "summary": "",
             "fake_comments": [],
-            "keywords": []
+            "keywords": [],
+            "pros": [],
+            "cons": []
         }
 
         # Run the analysis graph
@@ -173,5 +216,7 @@ class ProductAnalyzer:
             rating=final_state["rating"],
             summary=final_state["summary"],
             fake_comments=final_state["fake_comments"],
-            keywords=final_state["keywords"]
+            keywords=final_state["keywords"],
+            pros=final_state["pros"],
+            cons=final_state["cons"]
         ) 
