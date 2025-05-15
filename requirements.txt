@@ -21,3 +21,6 @@ requests>=2.31.0
 pydantic>=2.4.2
 pydantic-settings>=2.0.3
 typing-extensions>=4.8.0
+
+# Development dependencies
+black>=24.2.0
