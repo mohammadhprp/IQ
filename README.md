@@ -1,6 +1,6 @@
 # IQ 🧠
 
-A API-based service that analyzes product comments using AI to provide ratings, summaries, fake comment detection, and keyword extraction.
+An API-based service that analyzes product comments using AI to provide ratings, summaries, fake comment detection, keyword extraction, and pros/cons analysis.
 
 ## Prerequisites
 
@@ -29,7 +29,6 @@ GOOGLE_API_KEY=your_api_key_here
 ```bash
 docker compose up -d
 ```
-
 
 The API will be available at `http://localhost:8000`
 
@@ -74,6 +73,8 @@ Response:
   "rating": 4.5,
   "summary": "string",
   "fake_comments": ["string"],
-  "keywords": ["string"]
+  "keywords": ["string"],
+  "pros": ["string"],
+  "cons": ["string"]
 }
 ```
