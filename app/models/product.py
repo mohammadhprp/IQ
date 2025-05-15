@@ -17,3 +17,5 @@ class AnalysisResponse(BaseModel):
     summary: str
     fake_comments: List[str]
     keywords: List[str] 
+    pros: List[str]
+    cons: List[str]
